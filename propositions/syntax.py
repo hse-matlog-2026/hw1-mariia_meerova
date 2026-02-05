@@ -300,60 +300,38 @@ class Formula:
             A formula whose polish notation representation is the given string.
         """
         # Optional Task 1.8
-        stack = []
+        def parse(s):
+            if not s:
+                raise ValueError("Empty string")
+            
+            if is_variable(s[0]):
+                i = 1
+                while i < len(s) and s[i].isdigit():
+                    i += 1
+                return Formula(s[:i]), s[i:]
+            
+            if is_constant(s[0]):
+                return Formula(s[0]), s[1:]
+            
+            if s[0] == '~':
+                formula, rest = parse(s[1:])
+                return Formula('~', formula), rest
+            
+            if s.startswith('->'):
+                op = '->'
+                rest = s[2:]
+            elif s[0] in ['&', '|']:
+                op = s[0]
+                rest = s[1:]
+            
+            first, rest1 = parse(rest)
+            second, rest2 = parse(rest1)
+            
+            return Formula(op, first, second), rest2
         
-        i = len(string) - 1
+        formula, rest = parse(string)
         
-        while i >= 0:
-            if string[i].isspace():
-                i -= 1
-                continue
-            
-            if 'p' <= string[i] <= 'z':
-                end = i
-                while i > 0 and string[i-1].isdigit():
-                    i -= 1
-                start = i
-                if start > 0 and 'p' <= string[start-1] <= 'z':
-                    i -= 1
-                    continue
-                variable_name = string[start:end+1]
-                stack.append(Formula(variable_name))
-                i -= 1
-                continue
-            
-            if string[i] == 'T' or string[i] == 'F':
-                stack.append(Formula(string[i]))
-                i -= 1
-                continue
-            
-            if string[i] == '~':
-                if not stack:
-                    raise ValueError("No operand for ~")
-                operand = stack.pop()
-                stack.append(Formula('~', operand))
-                i -= 1
-                continue
-            
-            if i > 0 and string[i-1:i+1] == '->':
-                if len(stack) < 2:
-                    raise ValueError("No operands for ->")
-                right = stack.pop()
-                left = stack.pop()
-                stack.append(Formula('->', left, right))
-                i -= 2
-                continue
-            
-            if string[i] == '&' or string[i] == '|':
-                if len(stack) < 2:
-                    raise ValueError(f"No operands for {string[i]}")
-                right = stack.pop()
-                left = stack.pop()
-                stack.append(Formula(string[i], left, right))
-                i -= 1
-                continue
-        
-        return stack[0]
+        return formula
 
     def substitute_variables(self, substitution_map: Mapping[str, Formula]) -> \
             Formula:
