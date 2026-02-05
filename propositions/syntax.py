@@ -153,15 +153,14 @@ class Formula:
             A set of all variable names used in the current formula.
         """
         # Task 1.2
-        def variables(self) -> Set[str]:
-            if is_variable(self.root):
-                return {self.root}
-            elif is_constant(self.root):
-                return set()
-            elif is_unary(self.root):
-                return self.first.variables()
-            else:
-                return self.first.variables().union(self.second.variables())
+        if is_variable(self.root):
+            return {self.root}
+        elif is_constant(self.root):
+            return set()
+        elif is_unary(self.root):
+            return self.first.variables()
+        else:
+            return self.first.variables().union(self.second.variables())
 
     @memoized_parameterless_method
     def operators(self) -> Set[str]:
@@ -172,18 +171,17 @@ class Formula:
             current formula.
         """
         # Task 1.3
-        def operators(self) -> Set[str]:
-            if is_variable(self.root):
-                return set()
-            elif is_constant(self.root) or is_unary(self.root) or is_binary(self.root):
-                result = {self.root}
-                if is_unary(self.root):
-                    result.update(self.first.operators())
-                elif is_binary(self.root):
-                    result.update(self.first.operators())
-                    result.update(self.second.operators())
-                return result
+        if is_variable(self.root):
             return set()
+        elif is_constant(self.root) or is_unary(self.root) or is_binary(self.root):
+            result = {self.root}
+            if is_unary(self.root):
+                result.update(self.first.operators())
+            elif is_binary(self.root):
+                result.update(self.first.operators())
+                result.update(self.second.operators())
+            return result
+        return set()
         
     @staticmethod
     def _parse_prefix(string: str) -> Tuple[Union[Formula, None], str]:
