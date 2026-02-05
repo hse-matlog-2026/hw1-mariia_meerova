@@ -323,6 +323,8 @@ class Formula:
                 continue
                 
             if string[i] == '~':
+                if not stack:
+                    raise ValueError(f"No operand for ~ at position {i}")
                 operand = stack.pop()
                 stack.append(Formula('~', operand))
                 i += 1
