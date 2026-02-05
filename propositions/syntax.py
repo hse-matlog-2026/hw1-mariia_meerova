@@ -301,48 +301,57 @@ class Formula:
         """
         # Optional Task 1.8
         stack = []
-        i = 0
         
-        while i < len(string):
+        i = len(string) - 1
+        
+        while i >= 0:
             if string[i].isspace():
-                i += 1
+                i -= 1
                 continue
-                
+            
             if 'p' <= string[i] <= 'z':
+                end = i
+                while i > 0 and string[i-1].isdigit():
+                    i -= 1
                 start = i
-                i += 1
-                while i < len(string) and string[i].isdigit():
-                    i += 1
-                variable_name = string[start:i]
+                if start > 0 and 'p' <= string[start-1] <= 'z':
+                    i -= 1
+                    continue
+                variable_name = string[start:end+1]
                 stack.append(Formula(variable_name))
+                i -= 1
                 continue
-                
+            
             if string[i] == 'T' or string[i] == 'F':
                 stack.append(Formula(string[i]))
-                i += 1
+                i -= 1
                 continue
-                
+            
             if string[i] == '~':
                 if not stack:
-                    raise ValueError(f"No operand for ~ at position {i}")
+                    raise ValueError("No operand for ~")
                 operand = stack.pop()
                 stack.append(Formula('~', operand))
-                i += 1
+                i -= 1
                 continue
-                
-            if i + 2 < len(string) and is_binary(string[i:i+3]):
-                operator = string[i:i+3]
-                i += 3
-            elif i + 1 < len(string) and is_binary(string[i:i+2]):
-                operator = string[i:i+2]
-                i += 2
-            elif is_binary(string[i]):
-                operator = string[i]
-                i += 1
             
-            second = stack.pop()
-            first = stack.pop()
-            stack.append(Formula(operator, first, second))
+            if i > 0 and string[i-1:i+1] == '->':
+                if len(stack) < 2:
+                    raise ValueError("No operands for ->")
+                right = stack.pop()
+                left = stack.pop()
+                stack.append(Formula('->', left, right))
+                i -= 2
+                continue
+            
+            if string[i] == '&' or string[i] == '|':
+                if len(stack) < 2:
+                    raise ValueError(f"No operands for {string[i]}")
+                right = stack.pop()
+                left = stack.pop()
+                stack.append(Formula(string[i], left, right))
+                i -= 1
+                continue
         
         return stack[0]
 
