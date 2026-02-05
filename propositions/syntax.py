@@ -300,6 +300,49 @@ class Formula:
             A formula whose polish notation representation is the given string.
         """
         # Optional Task 1.8
+        stack = []
+        i = 0
+        
+        while i < len(string):
+            if string[i].isspace():
+                i += 1
+                continue
+                
+            if 'p' <= string[i] <= 'z':
+                start = i
+                i += 1
+                while i < len(string) and string[i].isdigit():
+                    i += 1
+                variable_name = string[start:i]
+                stack.append(Formula(variable_name))
+                continue
+                
+            if string[i] == 'T' or string[i] == 'F':
+                stack.append(Formula(string[i]))
+                i += 1
+                continue
+                
+            if string[i] == '~':
+                operand = stack.pop()
+                stack.append(Formula('~', operand))
+                i += 1
+                continue
+                
+            if i + 2 < len(string) and is_binary(string[i:i+3]):
+                operator = string[i:i+3]
+                i += 3
+            elif i + 1 < len(string) and is_binary(string[i:i+2]):
+                operator = string[i:i+2]
+                i += 2
+            elif is_binary(string[i]):
+                operator = string[i]
+                i += 1
+            
+            second = stack.pop()
+            first = stack.pop()
+            stack.append(Formula(operator, first, second))
+        
+        return stack[0]
 
     def substitute_variables(self, substitution_map: Mapping[str, Formula]) -> \
             Formula:
