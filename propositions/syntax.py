@@ -114,10 +114,7 @@ class Formula:
             return self.root
         elif is_unary(self.root):
             first_str = str(self.first)
-            if is_binary(self.first.root):
-                return '~(' + first_str + ')'
-            else:
-                return '~' + first_str
+            return '~' + first_str
         else:
             return '(' + str(self.first) + self.root + str(self.second) + ')'
 
