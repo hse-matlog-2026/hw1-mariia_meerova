@@ -153,6 +153,15 @@ class Formula:
             A set of all variable names used in the current formula.
         """
         # Task 1.2
+        def variables(self) -> Set[str]:
+            if is_variable(self.root):
+                return {self.root}
+            elif is_constant(self.root):
+                return set()
+            elif is_unary(self.root):
+                return self.first.variables()
+            else:
+                return self.first.variables().union(self.second.variables())
 
     @memoized_parameterless_method
     def operators(self) -> Set[str]:
@@ -163,6 +172,18 @@ class Formula:
             current formula.
         """
         # Task 1.3
+        def operators(self) -> Set[str]:
+            if is_variable(self.root):
+                return set()
+            elif is_constant(self.root) or is_unary(self.root) or is_binary(self.root):
+                result = {self.root}
+                if is_unary(self.root):
+                    result.update(self.first.operators())
+                elif is_binary(self.root):
+                    result.update(self.first.operators())
+                    result.update(self.second.operators())
+                return result
+            return set()
         
     @staticmethod
     def _parse_prefix(string: str) -> Tuple[Union[Formula, None], str]:
@@ -182,6 +203,49 @@ class Formula:
             is a string with some human-readable content.
         """
         # Task 1.4
+        if not string:
+            return None, "Empty string"
+        
+        if is_variable(string[0]):
+            i = 1
+            while i < len(string) and string[i].isdigit():
+                i += 1
+            return Formula(string[:i]), string[i:].strip()
+        
+        if is_constant(string[0]):
+            return Formula(string[0]), string[1:].strip()
+        
+        if string[0] == '~':
+            formula, rest = Formula._parse_prefix(string[1:])
+            if formula is None:
+                return None, "Invalid formula after ~"
+            return Formula('~', formula), rest.strip()
+        
+        if string[0] == '(':
+            first_formula, rest = Formula._parse_prefix(string[1:])
+            if first_formula is None:
+                return None, "Invalid first formula in binary operation"
+            
+            operator = None
+            if len(rest) >= 2 and rest[:2] == '->':
+                operator = '->'
+                rest = rest[2:].strip()
+            elif len(rest) >= 1 and (rest[0] == '&' or rest[0] == '|'):
+                operator = rest[0]
+                rest = rest[1:].strip()
+            else:
+                return None, "Expected binary operator"
+            
+            second_formula, rest = Formula._parse_prefix(rest)
+            if second_formula is None:
+                return None, "Invalid second formula in binary operation"
+            
+            if not rest or rest[0] != ')':
+                return None, "Expected closing parenthesis"
+            
+            return Formula(operator, first_formula, second_formula), rest[1:].strip()
+        
+        return None, f"Invalid formula format: {string}"
 
     @staticmethod
     def is_formula(string: str) -> bool:
